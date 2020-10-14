@@ -7,8 +7,6 @@ import kotlin.concurrent.thread
 import kotlin.random.Random
 
 fun main(args: Array<String>) {
-//    System.setProperty(SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "INFO");
-
     val uri = System.getProperty("uri")
     println("uri = ${uri}")
     val uris = uri.split(',')
@@ -22,13 +20,6 @@ fun main(args: Array<String>) {
             .map { thread { runReading(it.toInt(), client) } }
             .toList()
             .forEach { it.join() }
-}
-
-fun startOperations(key: String, client: RedissonClient) {
-    while (true) {
-        println("<top>.startOperations ${key}")
-        Thread.sleep(500)
-    }
 }
 
 private fun runReading(
@@ -65,19 +56,18 @@ private fun runReading(
             if (startTrouble == 0L) {
                 startTrouble = startTime
             }
-            println("${Instant.now()} ${Thread.currentThread().id}, key: ${fkey}, exception during failover; " +
+            println("${Instant.now()} threadId: ${Thread.currentThread().id}, key: ${fkey}, exception during failover; " +
                     "maxTime = $maxTime;\n $e \n-----")
-//            println("e.sta = ${e.stackTrace}")
         } finally {
             // know that it with $sleep
             val elapsedTime = System.currentTimeMillis() - startTime
             if (elapsedTime > maxTime) {
-                println("${Instant.now()} ${Thread.currentThread().id}, key: ${fkey}, new maxTime: ${maxTime}")
+                println("${Instant.now()} ${Thread.currentThread().id}, key: ${fkey}, new request max time: ${maxTime}")
                 maxTime = elapsedTime
             }
             avgTime += elapsedTime
             if (startTrouble in 1 until endTrouble) {
-                println("${Instant.now()} ${Thread.currentThread().id}, key: ${fkey}, " +
+                println("${Instant.now()} threadId: ${Thread.currentThread().id}, key: ${fkey}, " +
                         "without response (seconds): ${TimeUnit.MILLISECONDS.toSeconds(endTrouble - startTrouble)}")
                 startTrouble = 0L
                 endTrouble = 0L
@@ -86,7 +76,7 @@ private fun runReading(
         val printPerOperation = System.getProperty("outperoperation")?.toInt()
         if (printPerOperation != null && readCount % printPerOperation == 0L) {
             val avgTimeInternal = if (readCount == 0L) 0L else avgTime / readCount
-            println("${Instant.now()} ${Instant.now()} ${Thread.currentThread().id}, key: ${fkey}, maxTime = $maxTime " +
+            println("${Instant.now()} threadId: ${Thread.currentThread().id}, key: ${fkey}, request max time = $maxTime " +
                     "avgTime = $avgTimeInternal readCount: $readCount")
         }
     }
