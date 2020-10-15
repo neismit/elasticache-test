@@ -32,7 +32,7 @@ object RedissonCommandExecutorFactory {
         config.useClusterServers().apply {
             addNodeAddress(*nodeUris.toTypedArray())
             isKeepAlive = true
-            readMode = ReadMode.MASTER
+            readMode = ReadMode.MASTER_SLAVE
             fillBaseConfig(this, password)
             dnsMonitoringInterval = DNS_MONITORING_INTERVAL_MS
             scanInterval = CLUSTER_SCAN_INTERVAL_MS
